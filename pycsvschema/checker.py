@@ -4,6 +4,7 @@
 import csv
 import json
 from itertools import chain
+import tempfile
 from typing import Dict, Optional
 
 import jsonschema
@@ -32,7 +33,7 @@ class RFCDialect(csv.Dialect):
 
 
 class Validator:
-    def __init__(self, csvfile: str, schema: Dict, output: Optional[str] = None, errors: str = "raise", strict=True):
+    def __init__(self, dataframe, csvfile: str, schema: Dict, output: Optional[str] = None, errors: str = "raise", strict=True):
         """
         :param csvfile: Path to CSV file
         :param schema: CSV Schema in dict
@@ -41,6 +42,8 @@ class Validator:
         error is 'coerce', output all errors.
         :param strict: Whether to follow RFC 4180 strictly when parsing CSV file
         """
+
+        self.data_frame = dataframe
 
         self.csvfile = csvfile
 
@@ -85,7 +88,7 @@ class Validator:
             jsonschema.validate(self.schema, json.load(meta_schema))
 
     def validate(self):
-        with open(self.csvfile, "r") as csvfile:
+        with self.get_csv_file() as csvfile:
             csv_reader = csv.reader(csvfile, dialect=self.csv_dialect)
 
             # Read first line as header
@@ -208,3 +211,15 @@ class Validator:
                     yield from validator(cell=cell, schema=self.schema, field_schema=column_info["field_schema"])
 
             callback(row_index, row)
+
+    def get_csv_file(self):
+        if self.csvfile is not None:
+            return open(self.csvfile, "r")
+
+        if self.data_frame is not None:
+            tf = tempfile.NamedTemporaryFile(mode="wt+")
+            self.data_frame.to_csv(tf, index=False)
+            tf.seek(0)
+            return tf
+        
+        return None

@@ -12,7 +12,7 @@ def validate(csv_file, schema_file):
     """Validate a CSV file against a given schema file."""
     with open(schema_file, "r") as schema_stream:
         schema = json.load(schema_stream)
-    v = Validator(csvfile=csv_file, schema=schema)
+    v = Validator(dataframe=None, csvfile=csv_file, schema=schema)
     v.validate()
 
 class TestChecker(unittest.TestCase):
