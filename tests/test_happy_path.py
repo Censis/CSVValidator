@@ -71,5 +71,3 @@ def test_validated_orthoindy():
       v.output
     except ValidationError as ex:
        print(ex)
-
-test_validated_orthoindy()
